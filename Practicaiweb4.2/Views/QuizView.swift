@@ -5,6 +5,8 @@ struct QuizView: View {
     @State private var displayedText = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var rotateImage = 0.0
+    @State private var animateImage = false
     @Binding var quizzesAcertados: [QuizItem.ID]
     
     let quiz: QuizItem
@@ -149,21 +151,27 @@ struct QuizView: View {
                         .cornerRadius(12)
                         .clipped()
                         .shadow(radius: 4)
-                        .onTapGesture(count: 2){
-                            userInput = quiz.answer
+                        .frame(height: 200)
+                        .rotationEffect(.degrees(rotateImage))
+                        .onTapGesture(count: 2) {
+                            // Animación de rotación (gira 3 veces, 1080 grados)
+                            withAnimation(.linear(duration: 2.0)) {
+                                rotateImage = 720 // 360 * 3 vueltas
+                                userInput = quiz.answer
+                                }
+                            }
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                .frame(width: 200, height: 200)
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(12)
                         }
-                } placeholder: {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                        .frame(width: 200, height: 200)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(12)
+                        .padding([.horizontal, .top, .bottom])
                 }
-                .padding([.horizontal, .top, .bottom])
             }
         }
         
-    }
     
     // Columna de la izquierda que contiene la pregunta y el autor
     var leftColumn: some View {
