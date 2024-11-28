@@ -18,7 +18,6 @@ struct QuizzesView: View {
                 NavigationLink(destination: QuizView(quizzesAcertados: $quizzesAcertados, quiz: quiz))
                 {
                     RowView(quiz:quiz)
-                    
                 }
             }
             .navigationTitle("Quizzes")
