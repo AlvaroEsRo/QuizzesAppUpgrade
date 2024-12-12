@@ -1,4 +1,7 @@
 /// Errores producidos en el modelo de los Quizzes
+
+import Foundation
+
 enum QuizzesModelError: LocalizedError {
     case internalError(msg: String)
     case corruptedDataError

@@ -10,10 +10,9 @@ import Foundation
 struct QuizItem: Codable, Identifiable {
     let id: Int
     let question: String
-    let answer: String
     let author: Author?
     let attachment: Attachment?
-    let favourite: Bool
+    var favourite: Bool
     
     struct Author: Codable {
         let isAdmin: Bool?
