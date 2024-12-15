@@ -8,11 +8,12 @@ struct QuizView: View {
     @State private var rotateImage = 0.0
     @State private var animateImage = false
     @Binding var quizzesAcertados: [QuizItem.ID]
-    @StateObject private var quizzesModel = QuizzesModel()
-
+    @EnvironmentObject var quizzesModel: QuizzesModel
+    
+    
     private let token = "31672ec34248438c2a53" // Sustituir con el token proporcionado
 
-    let quiz: QuizItem
+    var quiz: QuizItem
     
     var body: some View {
         GeometryReader { geometry in
@@ -54,7 +55,15 @@ struct QuizView: View {
             
             // Botón para alternar el estado favorito
             Button(action: {
-                quizzesModel.toggleFavourite(for: quiz) // Alterna el favorito en el modelo
+                Task {
+                    do {
+                        try await quizzesModel.toggleFavourite(for: quiz)
+                        
+
+                    } catch {
+                        print("Error al actualizar favorito: \(error.localizedDescription)")
+                    }
+                }
             }) {
                 Image(systemName: quiz.favourite ? "star.fill" : "star")
                     .foregroundColor(quiz.favourite ? .yellow : .gray)
@@ -157,13 +166,12 @@ struct QuizView: View {
         Group {
             if let imageUrl = quiz.attachment?.url {
                 AsyncImage(url: imageUrl) { image in
-                    image.resizable()
-                        .scaledToFit()
-                        .cornerRadius(12)
+                    image
+                        .resizable()
+                        .scaledToFit() // Mantener proporciones
+                        .cornerRadius(12) // Bordes redondeados
                         .clipped()
-                        .shadow(radius: 4)
-                        .frame(height: 200)
-                        .rotationEffect(.degrees(rotateImage))
+                        .shadow(radius: 4) // Sombra para estética
                         .onTapGesture(count: 2) {
                             withAnimation(.linear(duration: 2.0)) {
                                 rotateImage = 720
@@ -173,10 +181,11 @@ struct QuizView: View {
                 } placeholder: {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                        .frame(width: 200, height: 200)
+                        .frame(width: 200, height: 200) // Tamaño fijo para el placeholder
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(12)
                 }
+                .frame(maxWidth: .infinity, maxHeight: 300) // Limitar la altura máxima
                 .padding([.horizontal, .top, .bottom])
             }
         }

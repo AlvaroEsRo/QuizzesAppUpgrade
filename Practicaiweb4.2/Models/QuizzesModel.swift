@@ -2,7 +2,7 @@ import Foundation
 
 class QuizzesModel: ObservableObject {
     // Los datos
-    @Published private(set) var quizzes = [QuizItem]()
+    @Published var quizzes = [QuizItem]()
     @Published var score: Int = 0
     private let recordKey = "TotalAciertos" // Clave para el total de aciertos
     private let acertadosKey = "QuizzesAcertados"
@@ -10,6 +10,7 @@ class QuizzesModel: ObservableObject {
 
     private let quizzesURL = "https://quiz.dit.upm.es/api/quizzes/random10"
     private let token = "31672ec34248438c2a53" // Sustituir con el token proporcionado
+    
 
     func loadQuizzesFromServer() {
         guard let url = URL(string: "\(quizzesURL)?token=\(token)") else {
@@ -70,39 +71,41 @@ class QuizzesModel: ObservableObject {
           }
       }
     
-    func toggleFavourite(for quiz: QuizItem) {
-           guard let index = quizzes.firstIndex(where: { $0.id == quiz.id }) else { return }
+    func toggleFavourite(for quiz: QuizItem) async throws {
+        let urlString: String
+        let method: String
 
-           let isCurrentlyFavourite = quizzes[index].favourite
-           let httpMethod = isCurrentlyFavourite ? "DELETE" : "PUT"
-           let urlString = "https://quiz.dit.upm.es/api/users/tokenOwner/favourites/\(quiz.id)?token=\(token)"
+        if quiz.favourite {
+            urlString = "https://quiz.dit.upm.es/api/users/tokenOwner/favourites/\(quiz.id)?token=\(token)"
+            method = "DELETE"
+        } else {
+            urlString = "https://quiz.dit.upm.es/api/users/tokenOwner/favourites/\(quiz.id)?token=\(token)"
+            method = "PUT"
+        }
 
-           guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString) else {
+            throw QuizzesModelError.internalError(msg: "URL no válida para actualizar favorito.")
+        }
 
-           var request = URLRequest(url: url)
-           request.httpMethod = httpMethod
+        var request = URLRequest(url: url)
+        request.httpMethod = method
 
-           URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-               if let error = error {
-                   print("Error al actualizar favorito: \(error.localizedDescription)")
-                   return
-               }
+        let (data, response) = try await URLSession.shared.data(for: request)
 
-               guard let data = data else {
-                   print("Error: No se recibieron datos")
-                   return
-               }
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw QuizzesModelError.internalError(msg: "Error al actualizar favorito. Estado HTTP inválido.")
+        }
 
-               do {
-                   let result = try JSONDecoder().decode(FavouriteResponse.self, from: data)
-                   DispatchQueue.main.async {
-                       self?.quizzes[index].favourite = result.favourite
-                   }
-               } catch {
-                   print("Error al decodificar la respuesta: \(error.localizedDescription)")
-               }
-           }.resume()
-       }
+        let favouriteResponse = try JSONDecoder().decode(FavouriteResponse.self, from: data)
+        print(favouriteResponse)
+
+        DispatchQueue.main.async {
+            if let index = self.quizzes.firstIndex(where: { $0.id == favouriteResponse.id }) {
+                self.quizzes[index].favourite = favouriteResponse.favourite
+                print(self.quizzes[index].favourite)
+            }
+        }
+    }
 
        struct FavouriteResponse: Codable {
            let id: Int

@@ -8,8 +8,6 @@ struct QuizzesView: View {
     var body: some View {
         NavigationView {
             VStack {
-                
-                
                 // Toggle para elegir entre Mostrar Todos o Mostrar No Acertados
                 Toggle("Mostrar Quizzes Pendientes", isOn: $showQuizzesPendientes)
                     .padding([.top, .horizontal])
