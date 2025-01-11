@@ -172,6 +172,7 @@ struct QuizView: View {
                         .cornerRadius(12) // Bordes redondeados
                         .clipped()
                         .shadow(radius: 4) // Sombra para estética
+                        .rotationEffect(.degrees(rotateImage))
                         .onTapGesture(count: 2) {
                             withAnimation(.linear(duration: 2.0)) {
                                 rotateImage = 720
